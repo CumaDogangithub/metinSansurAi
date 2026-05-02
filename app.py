@@ -25,6 +25,11 @@ from prompts import MODEL_NAME
 APP_NAME = "Veri Maskeleme"
 APP_TAGLINE = "AI ile Akıllı Veri Maskeleme"
 
+# Ollama adresi — Docker compose'da 'http://ollama:11434' olur, lokalde varsayılan 127.0.0.1
+# 'ollama' Python paketi de bu env değişkenini otomatik okur, ek ayar gerekmez.
+OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434")
+os.environ["OLLAMA_HOST"] = OLLAMA_HOST   # alt importlar için garanti
+
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 CORS(app)
@@ -85,7 +90,7 @@ def get_image_engine() -> ImageCensor:
 
 def _check_ollama() -> bool:
     try:
-        r = pyrequests.get("http://127.0.0.1:11434/api/tags", timeout=2)
+        r = pyrequests.get(f"{OLLAMA_HOST.rstrip('/')}/api/tags", timeout=2)
         if r.status_code == 200:
             with _status_lock:
                 _status["ollama_ready"] = True
@@ -105,9 +110,9 @@ def warmup():
         _status["warmup_started"] = True
     _log("Warmup başladı")
     if _check_ollama():
-        _log("Ollama erişilebilir")
+        _log(f"Ollama erişilebilir: {OLLAMA_HOST}")
     else:
-        _log("UYARI: Ollama 127.0.0.1:11434 adresinde bulunamadı — `ollama serve` çalıştırın")
+        _log(f"UYARI: Ollama {OLLAMA_HOST} adresinde bulunamadı — `ollama serve` çalıştırın")
     try:
         get_text_engine()
     except Exception as e:
@@ -194,11 +199,12 @@ def _ollama_censor(text: str):
     """Doğrudan Ollama'ya prompt yolla, JSON yanıtını yakala.
     Hata durumunda dict döndürür; sessiz hata yutmaz."""
     import json as _json
-    import ollama
+    from ollama import Client as _OllamaClient
     from prompts import build_prompt as _build, SYSTEM_PROMPT as _sys
 
     try:
-        response = ollama.chat(
+        client = _OllamaClient(host=OLLAMA_HOST)
+        response = client.chat(
             model=MODEL_NAME,
             messages=[
                 {"role": "system", "content": _sys},
@@ -267,7 +273,7 @@ def api_censor_text():
         return jsonify({"ok": False, "error": "Boş metin"}), 400
 
     if not _check_ollama():
-        return jsonify({"ok": False, "error": "Ollama servisi çalışmıyor (127.0.0.1:11434). `ollama serve` komutunu çalıştırın."}), 503
+        return jsonify({"ok": False, "error": f"Ollama servisi çalışmıyor ({OLLAMA_HOST}). `ollama serve` komutunu çalıştırın veya OLLAMA_HOST env değişkenini kontrol edin."}), 503
 
     t0 = time.time()
     _set_stage("text", "Yapay zekâ analizi…")
@@ -325,7 +331,7 @@ def api_detect_image():
         return jsonify({"ok": False, "error": "Resim çözülemedi"}), 400
 
     if not _check_ollama():
-        return jsonify({"ok": False, "error": "Ollama servisi çalışmıyor (127.0.0.1:11434). `ollama serve` komutunu çalıştırın."}), 503
+        return jsonify({"ok": False, "error": f"Ollama servisi çalışmıyor ({OLLAMA_HOST}). `ollama serve` komutunu çalıştırın veya OLLAMA_HOST env değişkenini kontrol edin."}), 503
 
     t0 = time.time()
     _set_stage("image", "OCR motoru yükleniyor…")

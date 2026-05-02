@@ -388,6 +388,21 @@ Ben <span class="ok">Al* Yı****</span>, telefonum
                     </div>
                 </div>
 
+                <h3 style="margin-top: 28px;">Docker / Uzak Ollama</h3>
+                <p class="muted">Eğer Ollama'yı başka bir adreste (örn. Docker compose servisi veya uzak sunucu) çalıştırıyorsanız <code>OLLAMA_HOST</code> ortam değişkenini set edin:</p>
+                <pre class="setup-code"># Docker compose
+OLLAMA_HOST=http://ollama:11434
+
+# Uzak makine
+OLLAMA_HOST=http://192.168.1.50:11434
+
+# Linux/macOS (geçici)
+OLLAMA_HOST=http://ollama:11434 python app.py
+
+# Windows PowerShell (geçici)
+$env:OLLAMA_HOST = "http://ollama:11434"; python app.py</pre>
+                <p class="muted">Uygulama bu adresi sağlık kontrolü, modeller çağırma ve hata mesajları dahil her yerde kullanır. Set edilmemişse varsayılan: <code>http://127.0.0.1:11434</code></p>
+
                 <h3 style="margin-top: 28px;">Sorun Giderme</h3>
                 <ul class="faq">
                     <li>

@@ -1,0 +1,88 @@
+# ============================================================
+#  Veri Maskeleme — .gitignore
+# ============================================================
+
+# ----- Python -----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Sanal ortamlar
+venv/
+env/
+.venv/
+.env/
+ENV/
+
+# ----- Ortam değişkenleri / sırlar -----
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+secrets.json
+
+# ----- IDE / Editör -----
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+
+# ----- İşletim sistemi -----
+.DS_Store
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# ----- Proje verisi (resimler / örnek girdiler) -----
+# Test/örnek görselleri repo'ya gitmesin
+/denenecek*.png
+/denenecek*.jpg
+/sansurlu*.png
+/sansurlu*.jpg
+/sansurlu_cikti*
+
+# Kullanıcının yerel olarak yüklediği görseller
+static/uploads/*
+!static/uploads/.gitkeep
+
+# ----- Üretilen çıktı dosyaları -----
+comparison.html
+*.log
+
+# Geçici test dosyaları
+_*.json
+_*.txt
+tmp_*
+*.tmp
+
+# ----- Docker / Ollama -----
+ollama_data/
+*.tar
+*.tar.gz
+
+# ----- AI / OCR önbelleği -----
+.EasyOCR/
+~/.EasyOCR/
+
+# ----- Belge görselleri (README için docs/ klasörü dahil EDİLEBİLİR) -----
+# Eğer README'de ekran görüntüsü kullanmak istersen docs/*.png commit'lenir.
+# Aşağıdaki satırı yorum satırı olarak bırakıyorum — açmak istersen başındaki # işaretini kaldır.
+# docs/
+
+# ----- Diğer -----
+*.bak
+*.orig
+.history/

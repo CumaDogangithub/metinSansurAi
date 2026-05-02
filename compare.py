@@ -9,12 +9,17 @@ Sansürlü çıktıyı + süreyi alır; ardından her önemli alan için
 Sonuç: konsola tablo + comparison.html (renkli yan yana çıktı).
 """
 
+import os
 import time
 import html
 from pathlib import Path
 
-import ollama
+from ollama import Client as _OllamaClient
 from prompts import SYSTEM_PROMPT, build_prompt
+
+# Docker veya uzak Ollama desteği
+OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434")
+_client = _OllamaClient(host=OLLAMA_HOST)
 
 # ----- Test ayarı --------------------------------------------------------
 MODELS = ["qwen2.5:7b", "qwen2.5:14b", "gpt-oss-safeguard:20b"]
@@ -89,13 +94,14 @@ def censor_with_model(text: str, model: str):
     import json as _json
     prompt = build_prompt(text)
     t0 = time.time()
-    response = ollama.chat(
+    response = _client.chat(
         model=model,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": prompt},
         ],
         format="json",
+        keep_alive="30m",
     )
     elapsed = time.time() - t0
     try:
