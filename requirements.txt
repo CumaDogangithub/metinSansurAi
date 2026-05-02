@@ -1,0 +1,24 @@
+# Veri Maskeleme — Python bağımlılıkları
+# Üretimde donmuş sürümler (>=) kullanın; lokal denemede serbest bırakabilirsiniz.
+
+# Web framework
+Flask>=3.1.0
+flask-cors>=6.0.0
+
+# Yerel LLM istemcisi (Ollama)
+ollama>=0.6.0
+
+# OCR (Türkçe + İngilizce metin tanıma)
+easyocr>=1.7.0
+
+# Görüntü işleme
+opencv-python>=4.10.0
+pillow>=11.0.0
+numpy>=2.0.0
+
+# HTTP istemcisi (Ollama sağlık kontrolü için)
+requests>=2.32.0
+
+# easyocr otomatik kuracak ama bazı sistemlerde manuel gerekebilir:
+# torch>=2.0.0
+# torchvision>=0.15.0
