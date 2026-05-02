@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ app_name }} · {{ app_tagline }}</title>
+    <meta name="description" content="Yerel {{ model_name }} + EasyOCR ile çalışan, internete bilgi göndermeyen kişisel veri maskeleme aracı.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ cache_buster }}">
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-mark">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+            </div>
+            <div class="brand-text">
+                <span class="brand-name">{{ app_name }}</span>
+                <span class="brand-sub">{{ app_tagline }}</span>
+            </div>
+        </div>
+        <nav class="topbar-actions">
+            <span class="status-pill" id="statusPill">
+                <span class="dot"></span><span id="statusLabel">Bağlanıyor…</span>
+            </span>
+            <button class="icon-btn" id="themeToggle" aria-label="Tema değiştir" title="Tema">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sun"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-moon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+            <a class="icon-btn" href="https://github.com/" target="_blank" rel="noopener" aria-label="GitHub">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-1.97c-3.2.7-3.87-1.54-3.87-1.54-.52-1.32-1.27-1.67-1.27-1.67-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.75 2.69 1.25 3.35.96.1-.74.4-1.25.72-1.54-2.55-.29-5.23-1.27-5.23-5.66 0-1.25.45-2.27 1.18-3.07-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.15 1.17.91-.25 1.89-.38 2.86-.38.97 0 1.95.13 2.86.38 2.18-1.48 3.14-1.17 3.14-1.17.62 1.59.23 2.76.11 3.05.74.8 1.18 1.82 1.18 3.07 0 4.4-2.69 5.36-5.25 5.65.41.36.77 1.05.77 2.12v3.14c0 .31.21.68.8.56 4.57-1.52 7.85-5.83 7.85-10.91C23.5 5.65 18.35.5 12 .5z"/></svg>
+            </a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <section class="hero">
+            <div class="hero-text">
+                <span class="badge">
+                    <span class="badge-dot"></span>
+                    KVKK Uyumlu · Yerel İşleme · Veri Bulutta Tutulmaz
+                </span>
+                <h1>
+                    Kişisel verileri <span class="grad-text">tek tıkla</span>
+                    maskele.
+                </h1>
+                <p class="lede">
+                    <strong>{{ model_name }}</strong> ve <strong>EasyOCR</strong> ile çalışan açık kaynaklı sansür aracı.
+                    Metin ve görsellerdeki ad, telefon, e-posta ve TC kimlik bilgilerini bağlamı bozmadan otomatik tespit eder;
+                    hassas alanları kendi tarayıcınızda düzenleyebilirsiniz.
+                </p>
+                <div class="hero-cta">
+                    <button class="btn btn-primary" data-go="text">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
+                        Metin Maskele
+                    </button>
+                    <button class="btn btn-ghost" data-go="image">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>
+                        Görsel Maskele
+                    </button>
+                </div>
+                <ul class="hero-perks">
+                    <li><span>⚡</span> Anlık çıktı</li>
+                    <li><span>🔒</span> %100 lokal</li>
+                    <li><span>🧠</span> Bağlam farkındalığı</li>
+                    <li><span>🎨</span> Editörle ince ayar</li>
+                </ul>
+            </div>
+            <div class="hero-card" aria-hidden="true">
+                <div class="hero-card-row">
+                    <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                    <span class="hero-card-title">demo.txt</span>
+                </div>
+                <pre class="hero-pre"><code><span class="muted">// orijinal</span>
+Ben <span class="hl">Ali Yılmaz</span>, telefonum
+<span class="hl">0532 000 11 22</span>, e-posta
+<span class="hl">ali.yilmaz@example.com</span>.
+
+<span class="muted">// maskelenmiş</span>
+Ben <span class="ok">Al* Yı****</span>, telefonum
+<span class="ok">05** *** ** **</span>, e-posta
+<span class="ok">al********@****.***</span>.
+                </code></pre>
+            </div>
+        </section>
+
+        <nav class="tabs" role="tablist">
+            <button class="tab active" data-tab="text" role="tab">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+                Metin
+            </button>
+            <button class="tab" data-tab="image" role="tab">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>
+                Görsel
+            </button>
+            <button class="tab" data-tab="about" role="tab">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                Hakkında
+            </button>
+        </nav>
+
+        <!-- ============== METIN ============== -->
+        <section class="panel" id="panel-text" role="tabpanel">
+            <div class="panel-grid">
+                <div class="card">
+                    <div class="card-head">
+                        <h3>Girdi</h3>
+                        <div class="card-head-actions">
+                            <button class="chip" id="loadSampleBtn" title="Örnek metin yükle">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                Örnek
+                            </button>
+                            <button class="chip" id="clearTextBtn" title="Temizle">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                                Temizle
+                            </button>
+                        </div>
+                    </div>
+                    <textarea id="inputText" placeholder="Buraya hassas içerikli metni yapıştırın…"></textarea>
+                    <div class="card-foot">
+                        <span class="meta" id="inputMeta">0 karakter · 0 kelime</span>
+                        <button class="btn btn-primary" id="censorBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4z"/></svg>
+                            Maskele
+                            <span class="kbd">⏎</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-head">
+                        <h3>Çıktı</h3>
+                        <div class="card-head-actions">
+                            <button class="chip" id="copyBtn" disabled>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                Kopyala
+                            </button>
+                            <button class="chip" id="downloadTxtBtn" disabled>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                .txt indir
+                            </button>
+                        </div>
+                    </div>
+                    <div id="outputText" class="output-area placeholder" spellcheck="false">Burada maskelenmiş hâli görünecek…</div>
+                    <div class="card-foot stats" id="textStats" hidden>
+                        <div class="stat"><span class="stat-num" id="statMasked">0</span><span class="stat-lbl">maskelenen</span></div>
+                        <div class="stat"><span class="stat-num" id="statChars">0</span><span class="stat-lbl">karakter</span></div>
+                        <div class="stat"><span class="stat-num" id="statTime">0</span><span class="stat-lbl">ms</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============== GÖRSEL ============== -->
+        <section class="panel" id="panel-image" role="tabpanel" hidden>
+            <div class="card">
+                <div class="card-head">
+                    <h3>Görsel Yükle</h3>
+                    <div class="card-head-actions">
+                        <span class="meta" id="imageMeta">PNG / JPG · max 16MB</span>
+                    </div>
+                </div>
+
+                <div id="dropzone" class="dropzone">
+                    <input type="file" id="fileInput" accept="image/*" hidden>
+                    <div class="dropzone-inner">
+                        <div class="drop-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        </div>
+                        <h4>Görsel sürükleyin veya seçin</h4>
+                        <p class="muted">OCR + AI hassas alanları otomatik bulur, sonra editörde ince ayar yaparsınız.</p>
+                        <button class="btn btn-primary" id="pickFileBtn">Dosya Seç</button>
+                    </div>
+                </div>
+
+                <div id="editorWrap" hidden>
+                    <div class="editor-toolbar">
+                        <div class="tool-group">
+                            <label class="select-wrap" title="Sansür stili">
+                                <select id="styleSelect">
+                                    <option value="blur">Blur (gaussian)</option>
+                                    <option value="pixelate">Pixelate</option>
+                                    <option value="black">Siyah Bant</option>
+                                </select>
+                            </label>
+                            <label class="slider-wrap" id="blurStrengthWrap" title="Blur şiddeti">
+                                <span>Şiddet</span>
+                                <input id="blurRange" type="range" min="21" max="151" step="2" value="71">
+                                <span class="slider-val" id="blurVal">71</span>
+                            </label>
+                        </div>
+                        <div class="tool-group">
+                            <button class="tool active" data-tool="draw" title="Çiz / Düzenle (D)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                                <span>Çiz</span>
+                            </button>
+                            <button class="tool" data-tool="pan" title="Resmi kaydır (H · mobilde tek parmak)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-1.4-5.6-3L2 13c1-1 3.4-2.4 5 0l1 1.5"/></svg>
+                                <span>El</span>
+                            </button>
+                        </div>
+                        <div class="tool-group">
+                            <button class="tool" id="undoBtn" title="Geri al (Ctrl+Z)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 5 5v0a5 5 0 0 1-5 5H9"/></svg>
+                                <span>Geri</span>
+                            </button>
+                            <button class="tool" id="clearBoxesBtn" title="Tüm kutuları sil">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                                <span>Hepsini sil</span>
+                            </button>
+                            <button class="tool" id="resetBtn" title="AI önerilerini geri yükle">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 10 9 10"/></svg>
+                                <span>AI sıfırla</span>
+                            </button>
+                        </div>
+                        <div class="tool-group zoom-group">
+                            <button class="tool zoom-btn" id="zoomOutBtn" title="Uzaklaştır">−</button>
+                            <span class="zoom-label" id="zoomLabel">100%</span>
+                            <button class="tool zoom-btn" id="zoomInBtn" title="Yakınlaştır">+</button>
+                            <button class="tool" id="zoomFitBtn" title="Sığdır">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"/></svg>
+                                <span>Sığdır</span>
+                            </button>
+                        </div>
+                        <div class="tool-group right">
+                            <button class="btn btn-primary" id="applyBtn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                Uygula & İndir
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="editor-stage" id="editorStage">
+                        <div class="canvas-pad">
+                            <canvas id="editorCanvas"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="editor-meta">
+                        <span class="meta" id="boxesMeta">0 kutu</span>
+                        <span class="meta editor-hint-inline">
+                            <kbd>Çiz</kbd> mod: boş alan→yeni · kutu→seç/taşı · köşe→boyutlandır · × butonu→sil · <kbd>El</kbd> mod: kayıt · <kbd>Pinch</kbd> zoom
+                        </span>
+                        <span class="meta" id="aiMeta"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="resultCard" class="card" hidden>
+                <div class="card-head">
+                    <h3>Sonuç</h3>
+                    <div class="card-head-actions">
+                        <button class="chip" id="downloadImgBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            PNG indir
+                        </button>
+                        <button class="chip" id="newImgBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                            Yeni görsel
+                        </button>
+                    </div>
+                </div>
+                <div class="compare" id="compareWrap">
+                    <img id="resultImg" alt="Maskelenmiş çıktı">
+                </div>
+            </div>
+        </section>
+
+        <!-- ============== HAKKINDA ============== -->
+        <section class="panel" id="panel-about" role="tabpanel" hidden>
+            <div class="card about">
+                <h3>Nasıl çalışıyor?</h3>
+                <ol class="steps">
+                    <li>
+                        <span class="step-n">1</span>
+                        <div>
+                            <strong>OCR</strong> — Görsellerde EasyOCR ile Türkçe + İngilizce metin koordinatları çıkarılır.
+                        </div>
+                    </li>
+                    <li>
+                        <span class="step-n">2</span>
+                        <div>
+                            <strong>Bağlamsal Analiz</strong> — Yerel <code>{{ model_name }}</code> modeline metin bağlamı verilir; yalnızca <em>gönderici</em> kişiye ait kişisel veriler işaretlenir.
+                        </div>
+                    </li>
+                    <li>
+                        <span class="step-n">3</span>
+                        <div>
+                            <strong>Maskeleme</strong> — Metinde Python ile yıldızlanır, görsellerde Gaussian Blur / Pixelate / Black Bar uygulanır.
+                        </div>
+                    </li>
+                    <li>
+                        <span class="step-n">4</span>
+                        <div>
+                            <strong>İnce ayar</strong> — Tarayıcı içi editörde kutu ekleyip silebilir, blur şiddetini değiştirebilirsiniz.
+                        </div>
+                    </li>
+                </ol>
+                <div class="about-grid">
+                    <div class="about-item">
+                        <h4>🔒 Gizlilik</h4>
+                        <p>Tüm AI çıkarımları cihazınızda yapılır; veriler hiçbir buluta gönderilmez.</p>
+                    </div>
+                    <div class="about-item">
+                        <h4>🧩 Bağlam farkındalığı</h4>
+                        <p>Karşı taraf (firma, kurum) bilgilerini koruyup yalnızca gönderici verisini gizler.</p>
+                    </div>
+                    <div class="about-item">
+                        <h4>🎛️ Esnek çıktı</h4>
+                        <p>Blur, pixelate veya siyah bant; şiddet ayarı serbest. Tek tık ile PNG indirin.</p>
+                    </div>
+                    <div class="about-item">
+                        <h4>⌨️ Kısayollar</h4>
+                        <p><span class="kbd">Ctrl</span> + <span class="kbd">Enter</span> maskele · <span class="kbd">Ctrl</span> + <span class="kbd">Z</span> geri al · <span class="kbd">Del</span> seçili sil · <span class="kbd">Esc</span> seçimi kaldır · <span class="kbd">Ok</span> ince taşı · <span class="kbd">D</span> çiz · <span class="kbd">H</span> el (pan) · <span class="kbd">Ctrl</span> + <span class="kbd">tekerlek</span> zoom · <span class="kbd">0</span> sığdır</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card about">
+                <h3>Yerel Kurulum</h3>
+                <p class="muted">Bu uygulama tamamen sizin makinenizde çalışır — ne kişisel veri, ne de örnek metinler dış sunuculara gönderilir. Üç bileşene ihtiyaç vardır.</p>
+
+                <ol class="steps">
+                    <li>
+                        <span class="step-n">1</span>
+                        <div>
+                            <strong>Python 3.10+</strong> — sistem genelinde kurulu olması yeterli.
+                            <pre class="setup-code">python --version  # 3.10 veya üzeri</pre>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="step-n">2</span>
+                        <div>
+                            <strong>Ollama</strong> — yerel LLM çalışma ortamı. <a href="https://ollama.com/download" target="_blank" rel="noopener">ollama.com/download</a> adresinden indirip kurun. Kurulduktan sonra arka planda otomatik servis verir (<code>http://127.0.0.1:11434</code>).
+                        </div>
+                    </li>
+                    <li>
+                        <span class="step-n">3</span>
+                        <div>
+                            <strong>Modeli indirin</strong> — varsayılan olarak <code>{{ model_name }}</code> kullanılır (~9 GB). Disk alanı yetmiyorsa <code>qwen2.5:7b</code> da çalışır ama doğruluk düşer.
+                            <pre class="setup-code">ollama pull {{ model_name }}</pre>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="step-n">4</span>
+                        <div>
+                            <strong>Python bağımlılıklarını kurun</strong>
+                            <pre class="setup-code">pip install flask flask-cors ollama easyocr opencv-python pillow numpy requests</pre>
+                            <p class="muted">EasyOCR ilk import'ta OCR modellerini otomatik indirir (~100 MB).</p>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="step-n">5</span>
+                        <div>
+                            <strong>Sunucuyu başlatın</strong>
+                            <pre class="setup-code">python app.py</pre>
+                            <p class="muted">Tarayıcıda <a href="http://127.0.0.1:5000">http://127.0.0.1:5000</a></p>
+                        </div>
+                    </li>
+                </ol>
+
+                <h3 style="margin-top: 28px;">Sistem Gereksinimleri</h3>
+                <div class="about-grid">
+                    <div class="about-item">
+                        <h4>💾 RAM</h4>
+                        <p>Minimum 16 GB önerilir (qwen2.5:14b için). 7B model 8 GB ile çalışır.</p>
+                    </div>
+                    <div class="about-item">
+                        <h4>🖥️ İşlemci</h4>
+                        <p>CPU yeterli; ilk istek 6-10 sn, sonrakiler ~2-3 sn. CUDA varsa EasyOCR otomatik kullanır.</p>
+                    </div>
+                    <div class="about-item">
+                        <h4>💿 Disk</h4>
+                        <p>Ollama + qwen2.5:14b ~10 GB. EasyOCR modelleri ek ~100 MB.</p>
+                    </div>
+                    <div class="about-item">
+                        <h4>🌐 İnternet</h4>
+                        <p>Sadece kurulum sırasında (model indirme). Sonrasında tamamen offline çalışır.</p>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 28px;">Sorun Giderme</h3>
+                <ul class="faq">
+                    <li>
+                        <strong>"Ollama kapalı" hatası</strong> — terminalden <code>ollama serve</code> komutu çalıştırın veya Ollama uygulamasını başlatın.
+                    </li>
+                    <li>
+                        <strong>İlk istek 1 dakika sürdü</strong> — normal: model RAM'e yükleniyor. <code>keep_alive=30m</code> sayesinde sonraki istekler 2-3 sn.
+                    </li>
+                    <li>
+                        <strong>JSON hata mesajı</strong> — model bağlamı tam anlayamadı; metni kısaltıp tekrar deneyin veya <code>prompts.py</code>'da <code>MODEL_NAME</code>'i daha güçlü bir modele alın.
+                    </li>
+                    <li>
+                        <strong>Resim yüklemede yavaşlık</strong> — EasyOCR ilk yüklemede modelleri indiriyor; bir sonraki sefer hızlı olacaktır.
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <span>© 2026 {{ app_name }} · {{ model_name }} + EasyOCR · Cuma Doğan tarafından geliştirildi</span>
+        </footer>
+    </main>
+
+    <!-- Toast container -->
+    <div id="toast" class="toast" hidden></div>
+
+    <!-- Tam ekran loader -->
+    <div id="loader" class="loader" hidden>
+        <div class="loader-card">
+            <div class="loader-text" id="loaderText">İşleniyor…</div>
+            <div class="loader-sub" id="loaderSub">Yapay zekâ yerelde çalışıyor, biraz sürebilir.</div>
+            <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+            <button class="btn btn-ghost loader-cancel" id="cancelBtn">İptal</button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}?v={{ cache_buster }}"></script>
+</body>
+</html>
