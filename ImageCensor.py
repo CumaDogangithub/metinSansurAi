@@ -5,6 +5,8 @@ import ollama
 import tkinter as tk
 from PIL import Image,ImageTk
 
+from prompts import MODEL_NAME, SYSTEM_PROMPT, build_prompt
+
 
 class BlurEditor:
     """Kullanıcının sansür alanlarını görsel oalrak düzenlediği arayüz"""
@@ -109,27 +111,16 @@ class ImageCensor:
         print("OCR Motoru Yükleniyor ...")
         #Türkçe ve İngilizce destekli okuyucu (Ekran kartını kullanması için gpu=True)
         self.reader = easyocr.Reader(['tr','en'],gpu = True)
-        self.model_name = 'llama3'
+        self.model_name = MODEL_NAME
 
     def get_targets_from_ai(self,full_text):
         """Llama 3'e metnin tamamını verip sansürleneceklerin listesini (JSON) alır"""
-        prompt = f"""
-        Sen çok dilli bir veri gizliliği uzmanısın. Aşağıdaki metni oku.
-        GÖREVİN: Metni YAZAN/GÖNDEREN asıl kişiye (müşteri, mağdur) ait kişisel bilgileri (Ad, Soyad, Telefon, TC vb.) tespit etmektir.
-        
-        KURALLAR:
-        1. Karşı tarafın (aracı kurum, şirket, müşteri temsilcisi) bilgilerini ASLA seçme.
-        2. Çıktı olarak SADECE tespit ettiğin gönderici bilgilerini JSON formatında ver.
-        
-        ÖRNEK ÇIKTI FORMATI:
-        {{"gizlenecekler": ["Ahmet Yılmaz", "0532 999 88 77"]}}
-
-        METİN:
-        "{full_text}"
-        """
+        # Hibrit prompt: ilke + örnek kategoriler (prompts.py)
+        prompt = build_prompt(full_text)
 
         try:
             response = ollama.chat(model=self.model_name,messages=[
+                {'role':'system','content':SYSTEM_PROMPT},
                 {'role':'user','content':prompt}
             ],format = 'json')
             result = json.loads(response['message']['content'])

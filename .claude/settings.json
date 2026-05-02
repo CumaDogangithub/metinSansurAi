@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell($env:PYTHONIOENCODING=\"utf-8\"; python compare.py)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('detected:',d['stats']['detected_count'],'elapsed_ms:',d['stats']['elapsed_ms']\\)\")",
+      "PowerShell(python -c \"from app import app; print\\('imports ok'\\)\")",
+      "Bash(curl -s -o /tmp/js.js -w \"%{http_code}\" http://127.0.0.1:5000/static/js/app.js)",
+      "Bash(node -e ' *)",
+      "Bash(curl -s http://127.0.0.1:5000/static/js/app.js -o tmp_js.js)",
+      "Bash(python -c ' *)",
+      "Bash(rm -f tmp_js.js)",
+      "Bash(curl -s http://127.0.0.1:5000/static/js/app.js -o tmp.js)",
+      "Bash(rm -f tmp.js)"
+    ]
+  }
+}
