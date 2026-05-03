@@ -119,11 +119,28 @@ const downloadTxtBtn = $("#downloadTxtBtn");
 const textStats = $("#textStats");
 let lastCensored = "";
 
+const MAX_INPUT_CHARS = 1500;
+
 function updateInputMeta() {
     const t = inputText.value;
-    inputMeta.textContent = `${t.length.toLocaleString("tr-TR")} karakter · ${t.trim() ? t.trim().split(/\s+/).length : 0} kelime`;
+    const len = t.length;
+    const words = t.trim() ? t.trim().split(/\s+/).length : 0;
+    inputMeta.textContent = `${len.toLocaleString("tr-TR")} / ${MAX_INPUT_CHARS} karakter · ${words} kelime`;
+    // Eşiklere göre renklendir
+    inputMeta.classList.remove("warn", "danger");
+    if (len >= MAX_INPUT_CHARS) inputMeta.classList.add("danger");
+    else if (len >= MAX_INPUT_CHARS * 0.85) inputMeta.classList.add("warn");
 }
 inputText.addEventListener("input", updateInputMeta);
+// Yapıştırma sırasında limit aşılırsa kullanıcıya bildir
+inputText.addEventListener("paste", (e) => {
+    const pasted = (e.clipboardData || window.clipboardData).getData("text") || "";
+    const newLen = inputText.value.length - (inputText.selectionEnd - inputText.selectionStart) + pasted.length;
+    if (newLen > MAX_INPUT_CHARS) {
+        // Tarayıcı maxlength'i otomatik kırpar; sadece uyarı verelim
+        toast(`Metin ${MAX_INPUT_CHARS} karaktere kırpıldı`, "info");
+    }
+});
 updateInputMeta();
 
 function highlightMasked(text) {
