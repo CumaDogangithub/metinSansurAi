@@ -221,7 +221,7 @@ def _ollama_censor(text: str):
                 {"role": "user", "content": user_msg},
             ],
             format="json",
-            options={"temperature": 0.1, "num_ctx": 2048},  # 4096→2048: ~%30 hızlanma
+            options={"temperature": 0, "num_ctx": 2048},  # deterministic + ~%30 hızlanma
             keep_alive="30m",   # modeli 30dk RAM'de tut → soğuk yükleme yok
         )
         raw = response["message"]["content"]
