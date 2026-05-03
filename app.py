@@ -5,18 +5,15 @@ bu dosya yalnızca tarayıcıya hizmet eden bir HTTP arayüzüdür.
 """
 
 import base64
-import io
 import os
 import time
-import uuid
 from threading import Lock, Thread
 
 import cv2
 import numpy as np
 import requests as pyrequests
-from flask import Flask, jsonify, render_template, request, send_file
+from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
-from PIL import Image
 
 from TextCensorAI import TextCensorAI
 from ImageCensor import ImageCensor
@@ -212,7 +209,7 @@ def _ollama_censor(text: str):
                 {"role": "user", "content": _build(text)},
             ],
             format="json",
-            options={"temperature": 0.1, "num_ctx": 4096},
+            options={"temperature": 0.1, "num_ctx": 2048},  # 4096→2048: ~%30 hızlanma
             keep_alive="30m",   # modeli 30dk RAM'de tut → soğuk yükleme yok
         )
         raw = response["message"]["content"]
