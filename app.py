@@ -204,9 +204,10 @@ def _ollama_censor(text: str):
         SYSTEM_PROMPT_LITE as _sys_lite,
     )
 
-    # CPU-only sunucularda büyük modeller (14B+) ya da uzun prompt çok yavaştır.
-    # PROMPT_MODE=lite env değişkeni ile compact prompt'a geç.
-    use_lite = os.environ.get("PROMPT_MODE", "lite").lower() == "lite"
+    # Yerel makinelerde 14B model + tam prompt = F1 0.92 (önerilen)
+    # Sunucu CPU yetersizse Docker compose'da PROMPT_MODE=lite set ederek
+    # compact prompt'a düşülür (F1 düşer ama 30 sn altı yanıt).
+    use_lite = os.environ.get("PROMPT_MODE", "full").lower() == "lite"
     sys_msg = _sys_lite if use_lite else _sys_full
     user_msg = (_build_lite if use_lite else _build_full)(text)
 
@@ -281,12 +282,20 @@ def _ollama_censor(text: str):
     return {"ok": True, "censored": censored, "items": items, "applied": applied}
 
 
+MAX_TEXT_CHARS = 1500   # Demo sınırı — frontend'le aynı
+
+
 @app.route("/api/censor-text", methods=["POST"])
 def api_censor_text():
     data = request.get_json(force=True, silent=True) or {}
     text = (data.get("text") or "").strip()
     if not text:
         return jsonify({"ok": False, "error": "Boş metin"}), 400
+    if len(text) > MAX_TEXT_CHARS:
+        return jsonify({
+            "ok": False,
+            "error": f"Metin sınırı {MAX_TEXT_CHARS} karakter (gönderilen: {len(text)}). Demo sürümü kısıtlamasıdır.",
+        }), 413  # Payload Too Large
 
     if not _check_ollama():
         return jsonify({"ok": False, "error": f"Ollama servisi çalışmıyor ({OLLAMA_HOST}). `ollama serve` komutunu çalıştırın veya OLLAMA_HOST env değişkenini kontrol edin."}), 503

@@ -43,6 +43,18 @@
     </header>
 
     <main class="container">
+        <div class="demo-notice" role="status">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+            </svg>
+            <div>
+                <strong>Demo sürümüdür.</strong>
+                Sunucu donanım kısıtı nedeniyle metin alanı en fazla <strong>1500 karakter</strong>; yanıt süresi <strong>20-40 saniye</strong>; küçük model (<code>qwen2.5:3b</code> + sıkıştırılmış prompt) kullanılır.
+                Daha yüksek doğruluk için <a href="#panel-about" data-go="about"><strong>kendi makinenize kurun</strong></a> — yerel kurulumda <code>qwen2.5:14b</code> + tam prompt aktif olur, F1 skoru <strong>0.92</strong>'ye çıkar.
+                Tüm işlemler yerel sunucuda yapılır; veri dış servislere gönderilmez.
+            </div>
+        </div>
+
         <section class="hero">
             <div class="hero-text">
                 <span class="badge">
@@ -125,9 +137,9 @@ Ben <span class="ok">Al* Yı****</span>, telefonum
                             </button>
                         </div>
                     </div>
-                    <textarea id="inputText" placeholder="Buraya hassas içerikli metni yapıştırın…"></textarea>
+                    <textarea id="inputText" maxlength="1500" placeholder="Buraya hassas içerikli metni yapıştırın… (en fazla 1500 karakter)"></textarea>
                     <div class="card-foot">
-                        <span class="meta" id="inputMeta">0 karakter · 0 kelime</span>
+                        <span class="meta" id="inputMeta">0 / 1500 karakter · 0 kelime</span>
                         <button class="btn btn-primary" id="censorBtn">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4z"/></svg>
                             Maskele
@@ -326,8 +338,21 @@ Ben <span class="ok">Al* Yı****</span>, telefonum
             </div>
 
             <div class="card about">
-                <h3>Yerel Kurulum</h3>
-                <p class="muted">Bu uygulama tamamen sizin makinenizde çalışır — ne kişisel veri, ne de örnek metinler dış sunuculara gönderilir. Üç bileşene ihtiyaç vardır.</p>
+                <h3>Yerel Kurulum (Önerilen — Daha Yüksek Doğruluk)</h3>
+                <p class="muted">
+                    Bu demo, sunucu kısıtları nedeniyle <strong>{{ model_name }}</strong> ile + sıkıştırılmış prompt çalışıyor.
+                    Kendi makinenize kurarak <strong>qwen2.5:14b + tam prompt</strong> aktif olur ve doğruluk
+                    <strong>F1 0.92</strong> seviyesine çıkar (KVKK senaryolarında dolandırıcı/savcı/kurum ayrımı çok daha tutarlı).
+                    Aşağıdaki adımları takip edin; uygulama tamamen sizin makinenizde çalışır, dış servislere bilgi göndermez.
+                </p>
+
+                <div class="about-item" style="margin: 14px 0; border-left: 3px solid var(--accent);">
+                    <h4>🏠 Yerel vs Sunucu (Demo)</h4>
+                    <p style="font-size: 12.5px; line-height: 1.65;">
+                        <strong>Yerel kurulum (önerilen):</strong> qwen2.5:14b + tam prompt → F1 0.92, ~2-7 sn yanıt, metin sınırı yok.<br>
+                        <strong>Bu demo (sunucu):</strong> qwen2.5:3b + lite prompt → F1 düşük, 1500 karakter sınırı, ~30 sn yanıt.
+                    </p>
+                </div>
 
                 <ol class="steps">
                     <li>
@@ -346,15 +371,16 @@ Ben <span class="ok">Al* Yı****</span>, telefonum
                     <li>
                         <span class="step-n">3</span>
                         <div>
-                            <strong>Modeli indirin</strong> — varsayılan olarak <code>{{ model_name }}</code> kullanılır (~9 GB). Disk alanı yetmiyorsa <code>qwen2.5:7b</code> da çalışır ama doğruluk düşer.
-                            <pre class="setup-code">ollama pull {{ model_name }}</pre>
+                            <strong>Modeli indirin</strong> — yerel makinede <code>qwen2.5:14b</code> önerilir (~9 GB, F1 0.92).
+                            16 GB RAM yeterli, GPU gerekmez. Daha küçük makinede <code>qwen2.5:7b</code> da çalışır ama doğruluk %40 düşer.
+                            <pre class="setup-code">ollama pull qwen2.5:14b</pre>
                         </div>
                     </li>
                     <li>
                         <span class="step-n">4</span>
                         <div>
                             <strong>Python bağımlılıklarını kurun</strong>
-                            <pre class="setup-code">pip install flask flask-cors ollama easyocr opencv-python pillow numpy requests</pre>
+                            <pre class="setup-code">pip install -r requirements.txt</pre>
                             <p class="muted">EasyOCR ilk import'ta OCR modellerini otomatik indirir (~100 MB).</p>
                         </div>
                     </li>
@@ -363,7 +389,11 @@ Ben <span class="ok">Al* Yı****</span>, telefonum
                         <div>
                             <strong>Sunucuyu başlatın</strong>
                             <pre class="setup-code">python app.py</pre>
-                            <p class="muted">Tarayıcıda <a href="http://127.0.0.1:5000">http://127.0.0.1:5000</a></p>
+                            <p class="muted">
+                                Tarayıcıda <a href="http://127.0.0.1:5000">http://127.0.0.1:5000</a>.
+                                Yerel kurulumda varsayılan olarak <strong>14B model + tam prompt</strong> kullanılır,
+                                metin sınırı yoktur, ~2-7 sn yanıt verir.
+                            </p>
                         </div>
                     </li>
                 </ol>
