@@ -19,6 +19,33 @@ Few-shot pozitif + negatif örneklerle modele "neyi maskeleme"yi de gösteriyor.
 # ile 14B'ye geri dönülebilir.
 MODEL_NAME = "qwen2.5:3b"
 
+SYSTEM_PROMPT_LITE = (
+    "KVKK veri ayıklama asistanı. Sadece JSON dön: "
+    '{"gizlenecekler": [...]}'
+)
+
+
+def build_prompt_lite(text: str) -> str:
+    """Compact prompt — CPU-only sunucularda hız için.
+    Tam build_prompt'un ~%20'si boyutunda. F1 biraz düşer ama 90 sn yerine 20-40 sn."""
+    return f"""Aşağıdaki metni oku. Metni yazan KİŞİYE (gönderici/mağdur/şikayetçi) ve ailesine ait kişisel verileri tespit et.
+
+ASLA MASKELEME: dolandırıcı, firma çalışanı, savcı, hâkim, banka çalışanı isimleri/telefonu/IBAN'ı; mersis/dava esas/sicil no; kurum isimleri.
+
+GÖNDERİCİ VERİSİ (maskele): kendi adı/soyadı, TC, doğum tarihi, telefon, e-posta, adres, IBAN, hesap no, kullanıcı adı, şifre, eş/aile bilgileri, iş tel + dahili.
+
+ÖRNEK:
+Metin: "Ben Ali, TC 11111111111. Beni dolandırıcı Mehmet 0555... numarasından aradı."
+Çıktı: {{"gizlenecekler": ["Ali", "11111111111"]}}
+(Mehmet ve onun telefonu KORUNUR.)
+
+Sadece JSON dön. Başka yazma. Bilgiyi metinde geçtiği gibi yaz.
+
+METİN:
+\"\"\"{text}\"\"\"
+"""
+
+
 SYSTEM_PROMPT = (
     "Sen titiz bir KVKK uyumlu veri ayıklama asistanısın. "
     "Önce metindeki rolleri ayırt edersin (kim mağdur, kim sanık), "
