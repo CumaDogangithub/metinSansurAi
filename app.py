@@ -203,7 +203,8 @@ def _ollama_censor(text: str):
     from prompts import build_prompt as _build, SYSTEM_PROMPT as _sys
 
     try:
-        client = _OllamaClient(host=OLLAMA_HOST)
+        # 90 sn'de yanıt yoksa düş — Cloudflare 100 sn 504'ten önce bizim 503'ümüzü dönsün
+        client = _OllamaClient(host=OLLAMA_HOST, timeout=90)
         response = client.chat(
             model=MODEL_NAME,
             messages=[
@@ -216,7 +217,14 @@ def _ollama_censor(text: str):
         )
         raw = response["message"]["content"]
     except Exception as e:
-        return {"ok": False, "error": f"Ollama hatası: {e}"}
+        # OOM, timeout, network — kullanıcıya net mesaj
+        return {
+            "ok": False,
+            "error": (
+                f"Ollama yanıt vermedi ({e}). Sunucu RAM yetersizse model "
+                f"yüklenememiş olabilir; daha küçük model deneyin (qwen2.5:7b veya 3b)."
+            ),
+        }
 
     try:
         parsed = _json.loads(raw)
