@@ -25,26 +25,36 @@ SYSTEM_PROMPT_LITE = (
 
 
 def build_prompt_lite(text: str) -> str:
-    """Compact prompt — CPU-only sunucularda hız için.
-    Tam build_prompt'un ~%20'si boyutunda. F1 biraz düşer ama 90 sn yerine 20-40 sn."""
-    return f"""Aşağıdaki metni oku. Metni yazan KİŞİYE (gönderici/mağdur/şikayetçi) ve ailesine ait kişisel verileri tespit et.
+    """Compact prompt — CPU-only sunucularda hız için (3B/7B modeller).
+    Küçük modellerin kafası karışmasın diye kesin/katı kurallar + zıt 2 örnek."""
+    return f"""KVKK veri maskeleme. Aşağıdaki adımları SIRA İLE uygula:
 
-ASLA MASKELEME (önemli — bunlar şikayet/dava için delildir):
-- Dolandırıcı, firma çalışanı, savcı, hâkim, banka çalışanı isimleri ve onların telefonları
-- "Karşı tarafın IBAN'ı", "alıcı IBAN'ı", dolandırıcı banka hesabı (TR ile başlasa bile)
-- Mersis no, dava esas no, sicil no
-- Kurum/şirket isimleri (banka, BDDK, SPK vb.)
+ADIM 1: Metnin SAHİBİNİ bul. Metnin SAHİBİ = "Ben X" diyen kişidir. Tek bir kişidir.
+ADIM 2: Sadece SAHİBİN bilgilerini ve sahibin AİLESİNİN bilgilerini topla.
+ADIM 3: Metinde geçen DİĞER İSİMLERİN ve onların telefon/IBAN/email bilgilerini KESİNLİKLE TOPLAMA.
 
-MASKELE (gönderici verisi): kendi adı/soyadı, TC, doğum tarihi, telefon, e-posta, adres, KENDİ IBAN'ı/hesabı, kullanıcı adı, şifre, eş/aile bilgileri, iş tel + dahili.
+KURAL (önemli):
+- "Ben Ahmet" → Ahmet sahip, MASKELE.
+- "Beni Selim aradı" → Selim sahip DEĞİL, KORU.
+- "dolandırıcı/sahtekar/şüpheli/temsilci" sıfatıyla anılan herkes → KORU.
+- "Karşı tarafın IBAN'ı" diyen IBAN → KORU. "IBAN'ım/Hesabım" diyen IBAN → MASKELE.
+- Savcı, hâkim, kurum (BDDK/SPK/banka adı), mersis, dava esas no → KORU.
+- Eşim, çocuğum, vekilim, avukatım → bunlar SAHİBİN tarafıdır, MASKELE.
 
-İPUCU: "benim/kendi/bana ait" sahiplenme = MASKELE. "karşı tarafın/dolandırıcının/alıcı" = KORU.
+SAHİBE AİT TOPLA: ad, TC, doğum, telefon, email, adres, IBAN/hesap, kullanıcı adı, şifre, iş tel/dahili, eş bilgileri.
 
-ÖRNEK:
-Metin: "Ben Ali, IBAN'ım TR11... Karşı tarafın IBAN'ı TR99... Beni Mehmet aradı."
-Çıktı: {{"gizlenecekler": ["Ali", "TR11..."]}}
-(Mehmet ve TR99 KORUNUR.)
+ÖRNEK 1 (çoklu kişi):
+Metin: "Ben Ali Vural, telefonum 0532 111 22 33. Beni Mehmet adlı dolandırıcı 0850 999 88 77 numarasından aradı."
+SAHIP = Ali Vural
+DOĞRU çıktı: {{"gizlenecekler": ["Ali Vural", "0532 111 22 33"]}}
+(Mehmet sahip değil → KORU. 0850... onun numarası → KORU.)
 
-Sadece JSON dön. Başka yazma. Bilgiyi metinde geçtiği gibi yaz.
+ÖRNEK 2 (IBAN'lar):
+Metin: "Ben Ayşe. Kendi IBAN'ım TR11 0001..., karşı tarafın IBAN'ı TR99 0009..."
+DOĞRU çıktı: {{"gizlenecekler": ["Ayşe", "TR11 0001..."]}}
+(TR99 sahibe ait değil → KORU.)
+
+SADECE JSON dön. Başka yazma. Bilgileri metinde geçtikleri ŞEKİLDE listele (yazımı değiştirme).
 
 METİN:
 \"\"\"{text}\"\"\"
