@@ -2,15 +2,25 @@ import cv2
 import easyocr
 import json
 import ollama
-import tkinter as tk
-from PIL import Image,ImageTk
+from PIL import Image
+# Not: tkinter ve PIL.ImageTk sadece BlurEditor kullanıldığında lazy import edilir.
+# Bu sayede headless sunucularda (Docker python:slim vb.) Tk olmadan da
+# ImageCensor sınıfı sorunsuz import edilebilir.
 
 from prompts import MODEL_NAME, SYSTEM_PROMPT, build_prompt
 
 
 class BlurEditor:
-    """Kullanıcının sansür alanlarını görsel oalrak düzenlediği arayüz"""
+    """Kullanıcının sansür alanlarını görsel olarak düzenlediği masaüstü arayüzü.
+    Sadece CLI (process_image) modunda kullanılır; web uygulaması bu sınıfı çağırmaz.
+    """
     def __init__(self,cv_img,ai_boxes,output_path):
+        # Lazy import — Tk olmayan sunucularda ImageCensor importunu kırmasın
+        import tkinter as tk
+        from PIL import ImageTk
+        self._tk = tk
+        self._ImageTk = ImageTk
+
         self.output_path=output_path
         self.cv_img=cv_img.copy()
 
