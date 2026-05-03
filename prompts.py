@@ -11,8 +11,13 @@ Few-shot pozitif + negatif örneklerle modele "neyi maskeleme"yi de gösteriyor.
 #   qwen2.5:14b             — 9 GB RAM,   F1 0.92  ★ ideal (16+ GB RAM ister)
 #   gpt-oss-safeguard:20b   — 13 GB RAM,  F1 1.00  (en doğru)
 #
-# Sunucu RAM = 7.8 GB → 14B çalışmaz (OOM). 7B veya 3B'ye düşür:
-MODEL_NAME = "qwen2.5:7b"
+# CPU-only sunucularda inference süresi kritiktir:
+#   3B modeli ~4-8 sn yanıt verir (Cloudflare 100 sn timeout güvenli)
+#   7B modeli  ~30-90 sn (uzun metinde Cloudflare 504 riski)
+#   14B modeli ~60-180 sn (kesin timeout)
+# Sunucuda CPU yetersiz olduğu için 3B'de tutuyoruz; daha güçlü makine veya GPU
+# ile 14B'ye geri dönülebilir.
+MODEL_NAME = "qwen2.5:3b"
 
 SYSTEM_PROMPT = (
     "Sen titiz bir KVKK uyumlu veri ayıklama asistanısın. "
