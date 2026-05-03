@@ -363,12 +363,21 @@ def api_detect_image():
     try:
         engine = get_image_engine()
 
-        # ImageCensor.process_image içindeki adımları (Tkinter olmadan) çoğaltıyoruz
+        # ImageCensor.process_image içindeki OCR adımı; AI çağrısı için
+        # _ollama_censor kullanıyoruz → PROMPT_MODE/MODEL_NAME env değişkenlerine
+        # uyar ve text endpoint'iyle aynı hızı (3B + lite) elde eder.
         _set_stage("image", "Resim taranıyor (OCR)…")
         results = engine.reader.readtext(img)
         full_text = " ".join([text for (_bbox, text, _prob) in results])
-        _set_stage("image", "Yapay zekâ hassas alanları belirliyor…")
-        targets = engine.get_targets_from_ai(full_text) if full_text.strip() else []
+        targets = []
+        if full_text.strip():
+            _set_stage("image", "Yapay zekâ hassas alanları belirliyor…")
+            ai_result = _ollama_censor(full_text)
+            if ai_result.get("ok"):
+                targets = ai_result.get("items", [])
+            else:
+                # AI çöktüyse görseli yine döndür ama uyarı ver
+                _log(f"Image AI hata: {ai_result.get('error')}")
     finally:
         pass  # boxes hesabı bittikten sonra clear edeceğiz
 
