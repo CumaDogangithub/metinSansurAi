@@ -197,16 +197,27 @@ def _ollama_censor(text: str):
     Hata durumunda dict döndürür; sessiz hata yutmaz."""
     import json as _json
     from ollama import Client as _OllamaClient
-    from prompts import build_prompt as _build, SYSTEM_PROMPT as _sys
+    from prompts import (
+        build_prompt as _build_full,
+        build_prompt_lite as _build_lite,
+        SYSTEM_PROMPT as _sys_full,
+        SYSTEM_PROMPT_LITE as _sys_lite,
+    )
+
+    # CPU-only sunucularda büyük modeller (14B+) ya da uzun prompt çok yavaştır.
+    # PROMPT_MODE=lite env değişkeni ile compact prompt'a geç.
+    use_lite = os.environ.get("PROMPT_MODE", "lite").lower() == "lite"
+    sys_msg = _sys_lite if use_lite else _sys_full
+    user_msg = (_build_lite if use_lite else _build_full)(text)
 
     try:
-        # 90 sn'de yanıt yoksa düş — Cloudflare 100 sn 504'ten önce bizim 503'ümüzü dönsün
+        # 90 sn'de yanıt yoksa düş — Cloudflare 100 sn 504'ten önce bizim hatamız dönsün
         client = _OllamaClient(host=OLLAMA_HOST, timeout=90)
         response = client.chat(
             model=MODEL_NAME,
             messages=[
-                {"role": "system", "content": _sys},
-                {"role": "user", "content": _build(text)},
+                {"role": "system", "content": sys_msg},
+                {"role": "user", "content": user_msg},
             ],
             format="json",
             options={"temperature": 0.1, "num_ctx": 2048},  # 4096→2048: ~%30 hızlanma
