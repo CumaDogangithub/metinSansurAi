@@ -4,20 +4,19 @@ Ortak AI prompt'u — hem TextCensorAI hem ImageCensor tarafından kullanılır.
 Few-shot pozitif + negatif örneklerle modele "neyi maskeleme"yi de gösteriyor.
 """
 
-# Tek değiştirme noktası — model değiştirmek istediğinde sadece burayı güncelle.
-# compare.py kıyaslama sonuçları (Türkçe zorlu KVKK senaryosu):
-#   qwen2.5:3b              — ~2 GB RAM, hızlı, F1 düşük (sunucu kısıtlamasında demo için)
-#   qwen2.5:7b              — 4.7 GB RAM, F1 0.52  (RAM az olduğu sunucularda)
-#   qwen2.5:14b             — 9 GB RAM,   F1 0.92  ★ ideal (16+ GB RAM ister)
-#   gpt-oss-safeguard:20b   — 13 GB RAM,  F1 1.00  (en doğru)
+import os
+
+# YEREL kurulumlarda varsayılan = qwen2.5:14b (F1 0.92, ~6 sn cold / 2.3 sn warm)
+# Sunucuda Docker compose ile override edilebilir:
+#   environment:
+#     MODEL_NAME: qwen2.5:3b   (CPU-only sunucularda hız için)
 #
-# CPU-only sunucularda inference süresi kritiktir:
-#   3B modeli ~4-8 sn yanıt verir (Cloudflare 100 sn timeout güvenli)
-#   7B modeli  ~30-90 sn (uzun metinde Cloudflare 504 riski)
-#   14B modeli ~60-180 sn (kesin timeout)
-# Sunucuda CPU yetersiz olduğu için 3B'de tutuyoruz; daha güçlü makine veya GPU
-# ile 14B'ye geri dönülebilir.
-MODEL_NAME = "qwen2.5:3b"
+# compare.py kıyaslama sonuçları (Türkçe zorlu KVKK senaryosu):
+#   qwen2.5:3b              — ~2 GB RAM,  F1 düşük (demo / kısıtlı sunucu için)
+#   qwen2.5:7b              — 4.7 GB RAM, F1 0.52  (CPU-only orta seviye)
+#   qwen2.5:14b             — 9 GB RAM,   F1 0.92  ★ YEREL VARSAYILAN
+#   gpt-oss-safeguard:20b   — 13 GB RAM,  F1 1.00  (en doğru)
+MODEL_NAME = os.environ.get("MODEL_NAME", "qwen2.5:14b")
 
 SYSTEM_PROMPT_LITE = (
     "KVKK veri ayıklama asistanı. Sadece JSON dön: "
@@ -30,14 +29,20 @@ def build_prompt_lite(text: str) -> str:
     Tam build_prompt'un ~%20'si boyutunda. F1 biraz düşer ama 90 sn yerine 20-40 sn."""
     return f"""Aşağıdaki metni oku. Metni yazan KİŞİYE (gönderici/mağdur/şikayetçi) ve ailesine ait kişisel verileri tespit et.
 
-ASLA MASKELEME: dolandırıcı, firma çalışanı, savcı, hâkim, banka çalışanı isimleri/telefonu/IBAN'ı; mersis/dava esas/sicil no; kurum isimleri.
+ASLA MASKELEME (önemli — bunlar şikayet/dava için delildir):
+- Dolandırıcı, firma çalışanı, savcı, hâkim, banka çalışanı isimleri ve onların telefonları
+- "Karşı tarafın IBAN'ı", "alıcı IBAN'ı", dolandırıcı banka hesabı (TR ile başlasa bile)
+- Mersis no, dava esas no, sicil no
+- Kurum/şirket isimleri (banka, BDDK, SPK vb.)
 
-GÖNDERİCİ VERİSİ (maskele): kendi adı/soyadı, TC, doğum tarihi, telefon, e-posta, adres, IBAN, hesap no, kullanıcı adı, şifre, eş/aile bilgileri, iş tel + dahili.
+MASKELE (gönderici verisi): kendi adı/soyadı, TC, doğum tarihi, telefon, e-posta, adres, KENDİ IBAN'ı/hesabı, kullanıcı adı, şifre, eş/aile bilgileri, iş tel + dahili.
+
+İPUCU: "benim/kendi/bana ait" sahiplenme = MASKELE. "karşı tarafın/dolandırıcının/alıcı" = KORU.
 
 ÖRNEK:
-Metin: "Ben Ali, TC 11111111111. Beni dolandırıcı Mehmet 0555... numarasından aradı."
-Çıktı: {{"gizlenecekler": ["Ali", "11111111111"]}}
-(Mehmet ve onun telefonu KORUNUR.)
+Metin: "Ben Ali, IBAN'ım TR11... Karşı tarafın IBAN'ı TR99... Beni Mehmet aradı."
+Çıktı: {{"gizlenecekler": ["Ali", "TR11..."]}}
+(Mehmet ve TR99 KORUNUR.)
 
 Sadece JSON dön. Başka yazma. Bilgiyi metinde geçtiği gibi yaz.
 

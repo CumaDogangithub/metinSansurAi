@@ -25,12 +25,16 @@
 
 ## Hızlı Başlangıç
 
+> **🏠 Yerel kurulum varsayılanı = en yüksek doğruluk** (qwen2.5:14b + tam prompt → **F1 0.92**).
+> Sunucu/Docker dağıtımı için daha küçük model + lite prompt env değişkenleriyle ayrı yapılandırılır
+> (aşağıda Docker bölümü).
+
 ### Gereksinimler
 
 | Bileşen | Sürüm | Notlar |
 |---|---|---|
 | Python | 3.10+ | sistem genelinde |
-| RAM | 16 GB+ önerilir | 14B model için |
+| RAM | 16 GB+ | qwen2.5:14b için (8 GB ile qwen2.5:7b kullanın) |
 | Disk | ~10 GB | model indirimi |
 | OS | Windows / macOS / Linux | hepsinde test edildi |
 
@@ -40,17 +44,33 @@
 
 ### 2. Modeli çekin
 
+**Yerel kurulum varsayılanı** `qwen2.5:14b` (16 GB+ RAM gerekir, F1 0.92):
+
 ```bash
 ollama pull qwen2.5:14b
 ```
 
-Disk alanı yetmiyorsa alternatifler:
+Donanım yetmiyorsa alternatifler:
 
-- `qwen2.5:7b` — 4.7 GB, ~3 sn (warm), F1 0.52 (bağlam ayrımı zayıf)
-- `qwen2.5:14b` — 9 GB, ~2.3 sn (warm), F1 0.92 — **önerilen**
-- `gpt-oss-safeguard:20b` — 13 GB, ~6 sn (warm), F1 1.00 (en doğru)
+| Model | RAM | F1 | Yorum |
+|---|---|---|---|
+| `qwen2.5:14b` | 9 GB | **0.92** ★ | yerel varsayılan, en iyi denge |
+| `qwen2.5:7b` | 4.7 GB | 0.52 | RAM kısıtlı sistemler — gri rolleri kaçırır |
+| `qwen2.5:3b` | 2 GB | düşük | düşük kapasite sunucular (CPU-only Docker) |
+| `gpt-oss-safeguard:20b` | 13 GB | 1.00 | en doğru, %30 yavaş |
 
-Hangisini kullanacağınızı [`prompts.py`](prompts.py) içindeki `MODEL_NAME` ile değiştirebilirsiniz.
+Modeli değiştirmek için iki yol:
+
+**a)** [`prompts.py`](prompts.py) → `MODEL_NAME = "qwen2.5:7b"` (tek satır)
+
+**b)** Env değişkeni — kalıcı kod değişikliği yapmadan:
+```bash
+# Linux / macOS
+MODEL_NAME=qwen2.5:7b python app.py
+
+# Windows PowerShell
+$env:MODEL_NAME = "qwen2.5:7b"; python app.py
+```
 
 ### 3. Python bağımlılıkları
 
@@ -68,19 +88,24 @@ python app.py
 
 Tarayıcıda → [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
+İlk istek modeli RAM'e yüklerken **~6 sn**, sonraki istekler `keep_alive=30m` sayesinde **~2.3 sn**.
+
 ---
 
-## Docker Compose Kurulumu
+## Docker Compose Kurulumu (Sunucu Dağıtımı)
 
 İki konteyner: biri Ollama, biri Flask uygulaması. Modeller `./ollama_data/` klasöründe **kalıcı** tutulur — konteyner silinse bile 9 GB'lık model tekrar indirilmez.
+
+> **Donanıma göre iki örnek var.** RAM/CPU yeterliyse 14B'yi kullanın, kısıtlı VPS'lerde küçük model + lite prompt'a düşün.
+
+### A) Güçlü sunucu — 14B + tam prompt (önerilen)
 
 ```yaml
 services:
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
-    ports:
-      - "11434:11434"
+    ports: ["11434:11434"]
     volumes:
       - ./ollama_data:/root/.ollama
     restart: unless-stopped
@@ -88,21 +113,55 @@ services:
   app:
     build: .
     container_name: veri-maskeleme
-    depends_on:
-      - ollama
-    ports:
-      - "5000:5000"
+    depends_on: [ollama]
+    ports: ["5000:5000"]
     environment:
       OLLAMA_HOST: http://ollama:11434
+      # MODEL_NAME ve PROMPT_MODE varsayılan: qwen2.5:14b + full
     restart: unless-stopped
 ```
-
-İlk ayağa kaldırma:
 
 ```bash
 docker compose up -d
 docker exec -it ollama ollama pull qwen2.5:14b
 ```
+
+### B) Kısıtlı VPS (CPU-only, < 16 GB RAM) — demo modu
+
+```yaml
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: textsansur_ollama
+    ports: ["11434:11434"]
+    volumes:
+      - ./ollama_data:/root/.ollama
+    restart: unless-stopped
+
+  flask:
+    build: .
+    container_name: textsansur_flask
+    depends_on: [ollama]
+    ports: ["5000:5000"]
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      MODEL_NAME: qwen2.5:3b      # küçük model
+      PROMPT_MODE: lite           # sıkıştırılmış prompt
+    restart: unless-stopped
+```
+
+```bash
+docker compose up -d
+docker exec -it textsansur_ollama ollama pull qwen2.5:3b
+```
+
+### Env değişkenleri özeti
+
+| Değişken | Yerel default | Sunucu (demo) | Açıklama |
+|---|---|---|---|
+| `OLLAMA_HOST` | `http://127.0.0.1:11434` | `http://ollama:11434` | Ollama adresi |
+| `MODEL_NAME` | `qwen2.5:14b` | `qwen2.5:3b` | LLM modeli |
+| `PROMPT_MODE` | `full` | `lite` | Prompt boyutu (~3700 vs ~950 kr) |
 
 ---
 
@@ -142,21 +201,85 @@ Flask (app.py)       -- HTTP API katmani
 
 ## Prompt Mimarisi (Kalp)
 
-Bu projenin asıl değeri: **iki aşamalı + few-shot hibrit prompt**.
+Bu projenin asıl değeri: **iki aşamalı + few-shot hibrit prompt**. İki versiyon vardır:
 
-1. **Adım 1 — Rol belirle** (model zihninden geçirir, JSON'a yazmaz)
-   - Kim **gönderici** (mağdur, şikayetçi)?
-   - Kim **karşı taraf** (dolandırıcı, firma çalışanı)?
-   - Kim **kamu görevlisi** (savcı, hâkim)?
+| Versiyon | Boyut | Kullanım | F1 |
+|---|---|---|---|
+| `build_prompt` (full) | ~3700 kr | YEREL (varsayılan) | **0.92** |
+| `build_prompt_lite` | ~950 kr | Sunucu (CPU-only) | düşük |
 
-2. **Adım 2 — Yalnızca gönderici verilerini topla**
-   - Soyut ilke: *"Bu bilgi sızsa o kişi zarar görür mü?"*
-   - 8 örnek kategori (yön gösterici, kapsam değil)
-   - Yapılandırılmış ID'ler, gri roller, aile fertleri için özel sinyaller
+`PROMPT_MODE` env değişkeniyle seçilir; varsayılan `full`. Yerel kurulumda hiçbir şey set etmeden tam prompt çalışır.
 
-3. **Few-shot örnekler** — pozitif + negatif (4 örnek)
+### Tam prompt — yerel kurulumda kullanılan versiyon
 
-Detaylar için [`prompts.py`](prompts.py).
+Aşağıdaki yapı [`prompts.py:build_prompt()`](prompts.py) içindedir; iki aşamalı + 4 few-shot örnekli:
+
+```
+ADIM 1 — ROL BELİRLE (zihninden geçir, JSON'a yazma)
+═══════════════════════════════════════════════════════════
+Metni KİM YAZDI? = "GÖNDERİCİ" (mağdur, şikayetçi, müşteri)
+Metinde KİMDEN ŞİKAYET ediliyor? = "KARŞI TARAF"
+
+GÖNDERİCİ sinyalleri: "ben", "kendim", "bana ait", "şikayetimi sunmak"…
+
+KARŞI TARAF sinyalleri (MASKELENMEZ):
+  • dolandırıcı, şüpheli, sanık, fail, sahtekâr
+  • müşteri temsilcisi, satış uzmanı, broker, aracı
+  • operasyon müdürü, çağrı merkezi
+  • Karşı tarafa ait şirket isimleri ve onların IBAN/web/iletişim
+
+KAMU REFERANSLARI (asla maskeleme):
+  • Savcı, hâkim, müfettiş adları
+  • Mersis, dava esas no, sicil, mahkeme dosya no
+  • Kurum isimleri (BDDK, SPK, banka adı)
+
+ADIM 2 — GÖNDERİCİ + AİLESİNİN HASSAS VERİLERİNİ TOPLA
+═══════════════════════════════════════════════════════════
+İlke: "Bu bilgi sızsa o kişi zarar görür mü?" → EVET ise hedef.
+KAPSAMLI düşün; örnek kategoriler:
+  • Ad, soyad, lakap
+  • Kullanıcı adı / handle (örn: "ahmet_91", "@user")
+  • Kimlik numaraları (TC, pasaport, ehliyet, vergi no)
+  • İletişim (telefon, e-posta, sosyal medya)
+  • Açık adres (mahalle/cadde/no), doğum tarihi/yeri
+  • Finansal: IBAN, banka hesap, kart, kripto cüzdan
+  • Yatırım/üyelik kodları (örn: "778-44-90251-EU")
+  • Erişim: şifre, OTP, oturum tokenı
+  • Aile / vekâlet altındaki kişiler
+  • İş yeri telefonu / dahili — DAİMA maskele
+
+GRİ ROLLER (avukat, danışman, banka temsilcisi):
+  • GÖNDERİCİYE hizmet veriyorsa → maskele
+  • Karşı tarafa hizmet veriyorsa → MASKELEME
+
+  GÖNDERİCİYE HİZMET sinyalleri:
+    • "Avukatım", "vekilim", "danışmanım", "temsilcim"
+    • Bu kişilerin ofis adresi/tel/email DA gönderici tarafıdır
+
+ÖRNEKLER (few-shot)
+═══════════════════════════════════════════════════════════
+[ÖRNEK 1] Metin: "Ben Ahmet, TC 11111111111. Beni Selim
+adlı dolandırıcı 0555... aradı. Eşim Ayşe (0532...)..."
+DOĞRU: {"gizlenecekler": ["Ahmet", "11111111111", "Ayşe", "0532..."]}
+
+[ÖRNEK 2] Banka şikayeti — kurum çalışanı ASLA maskelenmez.
+[ÖRNEK 3] Yapılandırılmış ID — sahiplenme ifadesiyle MASKELE.
+[ÖRNEK 4] Avukat (gri rol, gönderici tarafı) — MASKELE.
+
+ÇIKTI KURALLARI
+═══════════════════════════════════════════════════════════
+1. SADECE JSON dön. Açıklama yazma.
+2. Anahtar: "gizlenecekler". Liste değer.
+3. Bilgiyi metinde geçtiği gibi yaz.
+4. Şüpheliyse listeden ÇIKAR (false positive maliyetlidir).
+```
+
+Tam metin ve few-shot örneklerinin gövdesi: [`prompts.py:build_prompt()`](prompts.py)
+
+### Lite prompt — sunucu demo modunda kullanılan versiyon
+
+Aynı mantık 4-5x sıkıştırılmış. Karşı IBAN/dolandırıcı vurgusu özet, tek örnekli.
+Detay için [`prompts.py:build_prompt_lite()`](prompts.py).
 
 ---
 
@@ -223,12 +346,22 @@ python compare.py
 
 ## Yapılandırma
 
-### Modeli değiştir
+### Env değişkenleri (en pratik)
+
+```bash
+MODEL_NAME=qwen2.5:14b      # varsayılan; sunucuda qwen2.5:3b
+PROMPT_MODE=full            # varsayılan; sunucuda lite
+OLLAMA_HOST=http://...      # varsayılan: http://127.0.0.1:11434
+PORT=5000                   # Flask port
+```
+
+### Modeli koddan değiştir
 
 [`prompts.py`](prompts.py)
 
 ```python
-MODEL_NAME = "qwen2.5:14b"  # veya "gpt-oss-safeguard:20b"
+MODEL_NAME = os.environ.get("MODEL_NAME", "qwen2.5:14b")
+# qwen2.5:14b (yerel) | qwen2.5:7b | qwen2.5:3b (demo) | gpt-oss-safeguard:20b
 ```
 
 ### Marka adı / başlık
