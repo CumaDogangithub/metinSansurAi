@@ -6,10 +6,13 @@ Few-shot pozitif + negatif örneklerle modele "neyi maskeleme"yi de gösteriyor.
 
 # Tek değiştirme noktası — model değiştirmek istediğinde sadece burayı güncelle.
 # compare.py kıyaslama sonuçları (Türkçe zorlu KVKK senaryosu):
-#   qwen2.5:7b              — 12.2s · F1 0.52   (HIZLI ama kafası karışık, ÖNERİLMEZ)
-#   qwen2.5:14b             — 10.9s · F1 0.92   ★ HIZ + DOĞRULUK DENGESİ
-#   gpt-oss-safeguard:20b   — 15.3s · F1 1.00   (en doğru, %30 yavaş)
-MODEL_NAME = "qwen2.5:14b"
+#   qwen2.5:3b              — ~2 GB RAM, hızlı, F1 düşük (sunucu kısıtlamasında demo için)
+#   qwen2.5:7b              — 4.7 GB RAM, F1 0.52  (RAM az olduğu sunucularda)
+#   qwen2.5:14b             — 9 GB RAM,   F1 0.92  ★ ideal (16+ GB RAM ister)
+#   gpt-oss-safeguard:20b   — 13 GB RAM,  F1 1.00  (en doğru)
+#
+# Sunucu RAM = 7.8 GB → 14B çalışmaz (OOM). 7B veya 3B'ye düşür:
+MODEL_NAME = "qwen2.5:7b"
 
 SYSTEM_PROMPT = (
     "Sen titiz bir KVKK uyumlu veri ayıklama asistanısın. "
