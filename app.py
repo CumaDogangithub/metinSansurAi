@@ -6,6 +6,7 @@ bu dosya yalnızca tarayıcıya hizmet eden bir HTTP arayüzüdür.
 
 import base64
 import os
+import re
 import time
 from threading import Lock, Thread
 
@@ -135,6 +136,58 @@ def data_url_to_cv(data_url: str):
     arr = np.frombuffer(raw, dtype=np.uint8)
     img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
     return img
+
+
+# ── OCR kutusu ↔ AI hedefi eşleştirme ───────────────────────────────────────
+_WORD_RE = re.compile(r"[^\W\d_]{3,}", re.UNICODE)  # 3+ harfli alfabetik token
+
+
+def _norm(s) -> str:
+    """Casefold + boşluk sadeleştirme — OCR ve AI çıktısını kıyaslanabilir yapar."""
+    return re.sub(r"\s+", " ", str(s if s is not None else "").strip()).casefold()
+
+
+def _digits(s) -> str:
+    return "".join(ch for ch in str(s if s is not None else "") if ch.isdigit())
+
+
+def _word_tokens(s) -> set:
+    """Kategori/etiket kelimelerini de içerebilen 3+ harfli alfabetik token kümesi."""
+    return {m.group(0) for m in _WORD_RE.finditer(_norm(s))}
+
+
+def box_is_sensitive(ocr_text: str, targets) -> bool:
+    """Bir OCR kutusunun AI'ın hassas işaretlediği veriyle örtüşüp örtüşmediği.
+
+    Tek yönlü 'kutu metni ⊆ hedef' kontrolü, OCR etiket+değeri tek kutuda
+    birleştirdiğinde ('Tel: 0532 …') sansürü kaçırıyordu. Burada:
+      1) çift yönlü metin içerme (her iki yön de),
+      2) rakam dizisi içerme (model telefonu/TC'yi yeniden biçimlendirse bile),
+      3) ortak kelime token'ı (OCR boşlukları/etiketi bozsa bile)
+    kontrol edilir.
+    """
+    n_box = _norm(ocr_text)
+    if not n_box:
+        return False
+    box_digits = _digits(ocr_text)
+    box_tokens = _word_tokens(ocr_text)
+    for target in targets:
+        n_t = _norm(target)
+        if not n_t:
+            continue
+        # 1) Çift yönlü metin içerme (kısa taraf en az 3 karakter olmalı)
+        if len(n_box) >= 3 and len(n_t) >= 3 and (n_box in n_t or n_t in n_box):
+            return True
+        # 2) Rakam dizisi içerme — en az 5 ortak rakam (telefon/TC/IBAN)
+        t_digits = _digits(target)
+        if len(box_digits) >= 5 and len(t_digits) >= 5 and (
+            box_digits in t_digits or t_digits in box_digits
+        ):
+            return True
+        # 3) Ortak kelime token'ı — OCR ismi etiketle birleştirse bile yakalar
+        if box_tokens & _word_tokens(target):
+            return True
+    return False
 
 
 @app.route("/")
@@ -384,25 +437,18 @@ def api_detect_image():
     boxes = []
     detected_words = []
     for (bbox, text, prob) in results:
-        is_target = any(
-            text.strip().lower() in target.lower() for target in targets
+        if not box_is_sensitive(text, targets):
+            continue
+        # bbox 4 köşe noktasıdır; eğik metinde de tüm alanı kapsasın diye min/max
+        xs = [int(p[0]) for p in bbox]
+        ys = [int(p[1]) for p in bbox]
+        boxes.append(
+            {
+                "x1": min(xs), "y1": min(ys),
+                "x2": max(xs), "y2": max(ys), "label": text,
+            }
         )
-        if (
-            not is_target
-            and len(text.strip()) > 5
-            and any(ch.isdigit() for ch in text)
-        ):
-            clean_text = "".join(filter(str.isdigit, text))
-            is_target = any(
-                clean_text in target.replace(" ", "") for target in targets
-            )
-        if is_target:
-            tl = tuple(map(int, bbox[0]))
-            br = tuple(map(int, bbox[2]))
-            boxes.append(
-                {"x1": tl[0], "y1": tl[1], "x2": br[0], "y2": br[1], "label": text}
-            )
-            detected_words.append(text)
+        detected_words.append(text)
 
     h, w = img.shape[:2]
     payload = {
